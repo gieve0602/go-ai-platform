@@ -39,7 +39,7 @@ func main() {
 	defer stop()
 	select {
 	case err := <-serverErr:
-		if err != nil && errors.Is(err, http.ErrServerClosed) {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("server failed: %v", err)
 		}
 	case <-sigCtx.Done():
