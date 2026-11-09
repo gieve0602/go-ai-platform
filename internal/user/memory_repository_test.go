@@ -135,11 +135,8 @@ func TestContextCancel(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
 	cancel()
 	err := memRepo.Create(ctx, user)
-	if ctxErr := ctx.Err(); ctx.Err() != nil && !errors.Is(ctxErr, context.Canceled) {
-		log.Fatalf("context cancel error: %v\n", ctxErr)
-	}
-	if err != nil {
-		log.Printf("Get user error: %v\n", err)
+	if err != nil && !errors.Is(err, context.Canceled) {
+		log.Fatalf("context cancel error: %v\n", err)
 	}
 }
 

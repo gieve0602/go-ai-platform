@@ -89,19 +89,3 @@ func (m *MemRepository) GetByID(ctx context.Context, id int64) (User, error) {
 		return User{}, ErrUserNotExists
 	}
 }
-
-func (m *MemRepository) GetByID2(ctx context.Context, id int64) (User, error) {
-	if err := ctx.Err(); err != nil {
-		return User{}, err
-	}
-	if id < 0 {
-		return User{}, ErrValidParam
-	}
-	m.mux.Lock()
-	defer m.mux.Unlock()
-	if user, ok := m.data[id]; ok {
-		return user, nil
-	} else {
-		return User{}, ErrUserNotExists
-	}
-}
