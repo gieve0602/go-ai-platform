@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
 
 func TestCreateUser(t *testing.T) {
-	user := &User{
-		id:   0o001,
-		name: "test1",
+	user := User{
+		ID:   0o001,
+		Name: "test1",
 	}
 	memRepo := NewMemRepository()
 	ctx := context.Background()
@@ -42,9 +43,9 @@ func TestGetNotExistsUser(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	user := &User{
-		id:   0o001,
-		name: "test1",
+	user := User{
+		ID:   0o001,
+		Name: "test1",
 	}
 	memRepo := NewMemRepository()
 	ctx := context.Background()
@@ -52,7 +53,7 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Update user: get user err: %v\n", err)
 	}
-	user.name = "test2"
+	user.Name = "test2"
 	err = memRepo.Update(ctx, user)
 	if err != nil {
 		t.Fatalf("Update user error: %v\n", err)
@@ -68,6 +69,11 @@ func TestUpdateUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	memRepo := NewMemRepository()
 	ctx := context.Background()
+	user := User{
+		ID:   0o001,
+		Name: "test1",
+	}
+	_ = memRepo.Create(ctx, user)
 	err := memRepo.Delete(ctx, 1)
 	if err != nil {
 		t.Fatalf("Delete user error: %v\n", err)
@@ -76,9 +82,9 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestRepeatCreate(t *testing.T) {
-	user := &User{
-		id:   0o001,
-		name: "test1",
+	user := User{
+		ID:   0o001,
+		Name: "test1",
 	}
 	memRepo := NewMemRepository()
 	ctx := context.Background()
@@ -98,45 +104,77 @@ func TestParallelCreate(t *testing.T) {
 	ctx := context.Background()
 	var wg sync.WaitGroup
 	errChans := make(chan error, 10)
-	hasFail := false
+	var hasFail atomic.Bool
 	for idx := range 10 {
-		user := &User{
-			id:   int64(idx),
-			name: fmt.Sprintf("test-%d", idx),
+		user := User{
+			ID:   int64(idx),
+			Name: fmt.Sprintf("test-%d", idx),
 		}
 		wg.Go(func() {
 			err := memRepo.Create(ctx, user)
 			if err != nil {
-				hasFail = true
+				hasFail.Store(true)
 				errChans <- fmt.Errorf("parallel create user error: user-%d", idx)
 			}
 		})
 
 	}
 	wg.Wait()
-	if hasFail {
+	if hasFail.Load() {
 		log.Fatal(<-errChans)
 	}
 	log.Printf("after parallel crate user: %v\n", memRepo.data)
 }
 
 func TestContextCancel(t *testing.T) {
-	user := &User{
-		id:   1,
-		name: "test1",
+	user := User{
+		ID:   1,
+		Name: "test1",
 	}
 	memRepo := NewMemRepository()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	cancel()
 	err := memRepo.Create(ctx, user)
-	if err != nil {
-		t.Fatalf("create user fail: %v\n", err)
-	}
-	defer cancel()
-	_, err = memRepo.GetByID(ctx, 1)
-	if ctxErr := ctx.Err(); ctx.Err() != nil && !errors.Is(ctxErr, context.DeadlineExceeded) {
+	if ctxErr := ctx.Err(); ctx.Err() != nil && !errors.Is(ctxErr, context.Canceled) {
 		log.Fatalf("context cancel error: %v\n", ctxErr)
 	}
 	if err != nil {
 		log.Printf("Get user error: %v\n", err)
+	}
+}
+
+func BenchmarkMemoryRepositoryGetByID(b *testing.B) {
+	memRepo := NewMemRepository()
+	ctx := context.Background()
+	for idx := range 10 {
+		user := User{
+			ID:   int64(idx),
+			Name: fmt.Sprintf("test-%d", idx),
+		}
+		_ = memRepo.Create(ctx, user)
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		for idx := range 10 {
+			_, _ = memRepo.GetByID(ctx, int64(idx))
+		}
+	}
+}
+
+func BenchmarkMemoryRepositoryGetByID2(b *testing.B) {
+	memRepo := NewMemRepository()
+	ctx := context.Background()
+	for idx := range 10 {
+		user := User{
+			ID:   int64(idx),
+			Name: fmt.Sprintf("test-%d", idx),
+		}
+		_ = memRepo.Create(ctx, user)
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		for idx := range 10 {
+			_, _ = memRepo.GetByID(ctx, int64(idx))
+		}
 	}
 }

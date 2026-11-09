@@ -2,7 +2,7 @@
 package user
 
 type User struct {
-	id       int64
-	name     string
-	password string
+	ID       int64  `json:"id,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Password string `json:"-,omitempty"`
 }

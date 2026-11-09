@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"errors"
-	"log"
 	"sync"
 )
 
@@ -16,52 +15,46 @@ var (
 
 type (
 	MemRepository struct {
-		data map[int64]*User
+		data map[int64]User
 		mux  sync.RWMutex
 	}
 )
 
 func NewMemRepository() *MemRepository {
 	return &MemRepository{
-		data: make(map[int64]*User),
+		data: make(map[int64]User),
 	}
 }
 
-func RecoverPanic() {
-	if err := recover(); err != nil {
-		log.Printf("panic error: %v", err)
-	}
-}
-
-func (m *MemRepository) Create(ctx context.Context, user *User) error {
+func (m *MemRepository) Create(ctx context.Context, user User) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if user == nil {
+	if user == (User{}) {
 		return ErrValidUser
 	}
 	m.mux.Lock()
 	defer m.mux.Unlock()
-	if _, ok := m.data[user.id]; ok {
+	if _, ok := m.data[user.ID]; ok {
 		return ErrUserExists
 	}
-	m.data[user.id] = user
+	m.data[user.ID] = user
 	return nil
 }
 
-func (m *MemRepository) Update(ctx context.Context, user *User) error {
+func (m *MemRepository) Update(ctx context.Context, user User) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if user == nil {
+	if user == (User{}) {
 		return ErrValidUser
 	}
 	m.mux.Lock()
 	defer m.mux.Unlock()
-	if _, ok := m.data[user.id]; !ok {
+	if _, ok := m.data[user.ID]; !ok {
 		return ErrUserNotExists
 	}
-	m.data[user.id] = user
+	m.data[user.ID] = user
 	return nil
 }
 
@@ -74,6 +67,9 @@ func (m *MemRepository) Delete(ctx context.Context, id int64) error {
 	}
 	m.mux.Lock()
 	defer m.mux.Unlock()
+	if _, ok := m.data[id]; !ok {
+		return ErrUserNotExists
+	}
 	delete(m.data, id)
 	return nil
 }
@@ -85,10 +81,26 @@ func (m *MemRepository) GetByID(ctx context.Context, id int64) (User, error) {
 	if id < 0 {
 		return User{}, ErrValidParam
 	}
+	m.mux.RLock()
+	defer m.mux.RUnlock()
+	if user, ok := m.data[id]; ok {
+		return user, nil
+	} else {
+		return User{}, ErrUserNotExists
+	}
+}
+
+func (m *MemRepository) GetByID2(ctx context.Context, id int64) (User, error) {
+	if err := ctx.Err(); err != nil {
+		return User{}, err
+	}
+	if id < 0 {
+		return User{}, ErrValidParam
+	}
 	m.mux.Lock()
 	defer m.mux.Unlock()
 	if user, ok := m.data[id]; ok {
-		return *user, nil
+		return user, nil
 	} else {
 		return User{}, ErrUserNotExists
 	}
