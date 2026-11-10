@@ -5,23 +5,25 @@ import (
 	"fmt"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func createExampleData(t *testing.T, ctx context.Context, memRepo *MemRepository) {
 	user1 := User{
-		ID:   1,
-		Name: "test1",
+		ID:       1,
+		Name:     "test1",
+		Password: "123456",
 	}
 	user2 := User{
-		ID:   2,
-		Name: "test2",
+		ID:       2,
+		Name:     "test2",
+		Password: "123456",
 	}
 	user3 := User{
-		ID:   3,
-		Name: "test3",
+		ID:       3,
+		Name:     "test3",
+		Password: "123456",
 	}
 	err := memRepo.Create(ctx, user1)
 	assert.Equal(t, err, nil)
@@ -33,8 +35,9 @@ func createExampleData(t *testing.T, ctx context.Context, memRepo *MemRepository
 
 func TestCreateUser(t *testing.T) {
 	user := User{
-		ID:   0o001,
-		Name: "test1",
+		ID:       0o001,
+		Name:     "test1",
+		Password: "123456",
 	}
 	memRepo := NewMemRepository()
 	ctx := context.Background()
@@ -90,8 +93,9 @@ func TestRepeatCreate(t *testing.T) {
 	ctx := context.Background()
 	createExampleData(t, ctx, memRepo)
 	user1 := User{
-		ID:   1,
-		Name: "test1",
+		ID:       1,
+		Name:     "test1",
+		Password: "123456",
 	}
 	err := memRepo.Create(ctx, user1)
 	assert.ErrorIs(t, err, ErrUserExists)
@@ -103,9 +107,11 @@ func TestParallelCreate(t *testing.T) {
 	count := 10
 	var wg sync.WaitGroup
 	for idx := range count {
+		idx++
 		user := User{
-			ID:   int64(idx),
-			Name: fmt.Sprintf("test-%d", idx),
+			ID:       int64(idx),
+			Name:     fmt.Sprintf("test-%d", idx),
+			Password: "123456",
 		}
 		wg.Go(func() {
 			err := memRepo.Create(ctx, user)
@@ -118,11 +124,12 @@ func TestParallelCreate(t *testing.T) {
 
 func TestContextCancel(t *testing.T) {
 	user := User{
-		ID:   1,
-		Name: "test1",
+		ID:       1,
+		Name:     "test1",
+		Password: "123456",
 	}
 	memRepo := NewMemRepository()
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	err := memRepo.Create(ctx, user)
 	assert.ErrorIs(t, err, context.Canceled)
@@ -133,8 +140,9 @@ func BenchmarkMemoryRepositoryGetByID(b *testing.B) {
 	ctx := context.Background()
 	for idx := range 10 {
 		user := User{
-			ID:   int64(idx),
-			Name: fmt.Sprintf("test-%d", idx),
+			ID:       int64(idx),
+			Name:     fmt.Sprintf("test-%d", idx),
+			Password: "123456",
 		}
 		_ = memRepo.Create(ctx, user)
 	}

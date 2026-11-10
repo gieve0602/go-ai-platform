@@ -46,13 +46,13 @@ func TestServiceUpdateUser(t *testing.T) {
 	user := User{
 		ID:       int64(1),
 		Name:     "test-1",
-		Password: "12345",
+		Password: "123456",
 	}
 	err = svc.Create(ctx, user)
 	assert.NoError(t, err)
 	user.ID = 1
 	user.Name = "test-2"
-	user.Password = "123456"
+	user.Password = "1234567"
 	err = svc.Update(ctx, user)
 	assert.NoError(t, err)
 	newUser, err := svc.GetByID(ctx, 1)
@@ -69,7 +69,7 @@ func TestServiceDeleteUser(t *testing.T) {
 	user := User{
 		ID:       int64(1),
 		Name:     "test-1",
-		Password: "12345",
+		Password: "123456",
 	}
 	err = svc.Create(ctx, user)
 	assert.NoError(t, err)
@@ -88,11 +88,26 @@ func TestServiceGetUser(t *testing.T) {
 	user := User{
 		ID:       int64(1),
 		Name:     "test-1",
-		Password: "12345",
+		Password: "123456",
 	}
 	err = svc.Create(ctx, user)
 	assert.NoError(t, err)
 	newUser, err := svc.GetByID(ctx, user.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, newUser, user)
+}
+
+func TestServiceReturnRepoError(t *testing.T) {
+	repo := NewMemRepository()
+	svc, err := NewUserService(repo)
+	assert.NoError(t, err)
+
+	ctx := context.Background()
+	user := User{
+		ID:       int64(1),
+		Name:     "test-1",
+		Password: "12345",
+	}
+	err = svc.Create(ctx, user)
+	assert.ErrorIs(t, err, ErrWeakPassword)
 }

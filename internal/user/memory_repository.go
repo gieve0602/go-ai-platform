@@ -11,6 +11,7 @@ var (
 	ErrUserExists    = errors.New("user exists")
 	ErrUserNotExists = errors.New("user not exists")
 	ErrValidParam    = errors.New("invalid parameter")
+	ErrWeakPassword  = errors.New("weak password")
 )
 
 type (
@@ -33,6 +34,12 @@ func (m *MemRepository) Create(ctx context.Context, user User) error {
 	if user == (User{}) {
 		return ErrValidUser
 	}
+	if user.ID <= 0 {
+		return ErrValidParam
+	}
+	if len(user.Password) < 6 {
+		return ErrWeakPassword
+	}
 	m.mux.Lock()
 	defer m.mux.Unlock()
 	if _, ok := m.data[user.ID]; ok {
@@ -49,6 +56,9 @@ func (m *MemRepository) Update(ctx context.Context, user User) error {
 	if user == (User{}) {
 		return ErrValidUser
 	}
+	if user.ID <= 0 {
+		return ErrValidParam
+	}
 	m.mux.Lock()
 	defer m.mux.Unlock()
 	if _, ok := m.data[user.ID]; !ok {
@@ -62,7 +72,7 @@ func (m *MemRepository) Delete(ctx context.Context, id int64) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if id < 0 {
+	if id <= 0 {
 		return ErrValidParam
 	}
 	m.mux.Lock()
@@ -78,7 +88,7 @@ func (m *MemRepository) GetByID(ctx context.Context, id int64) (User, error) {
 	if err := ctx.Err(); err != nil {
 		return User{}, err
 	}
-	if id < 0 {
+	if id <= 0 {
 		return User{}, ErrValidParam
 	}
 	m.mux.RLock()
