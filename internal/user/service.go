@@ -9,6 +9,7 @@ import (
 var (
 	ErrValidPassword = errors.New("password is not valid")
 	ErrValidRepo     = errors.New("Repository is nil")
+	ErrWeakPassword  = errors.New("weak password")
 )
 
 type UserService struct {
@@ -33,6 +34,9 @@ func validateUser(user User) error {
 	}
 	if strings.TrimSpace(user.Password) == "" {
 		return ErrValidParam
+	}
+	if len(user.Password) < 6 {
+		return ErrWeakPassword
 	}
 	return nil
 }

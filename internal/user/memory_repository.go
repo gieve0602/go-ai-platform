@@ -11,7 +11,6 @@ var (
 	ErrUserExists    = errors.New("user exists")
 	ErrUserNotExists = errors.New("user not exists")
 	ErrValidParam    = errors.New("invalid parameter")
-	ErrWeakPassword  = errors.New("weak password")
 )
 
 type (
@@ -36,9 +35,6 @@ func (m *MemRepository) Create(ctx context.Context, user User) error {
 	}
 	if user.ID <= 0 {
 		return ErrValidParam
-	}
-	if len(user.Password) < 6 {
-		return ErrWeakPassword
 	}
 	m.mux.Lock()
 	defer m.mux.Unlock()

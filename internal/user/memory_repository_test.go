@@ -139,6 +139,7 @@ func BenchmarkMemoryRepositoryGetByID(b *testing.B) {
 	memRepo := NewMemRepository()
 	ctx := context.Background()
 	for idx := range 10 {
+		idx++
 		user := User{
 			ID:       int64(idx),
 			Name:     fmt.Sprintf("test-%d", idx),
