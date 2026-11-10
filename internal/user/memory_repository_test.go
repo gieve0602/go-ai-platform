@@ -39,11 +39,9 @@ func TestCreateUser(t *testing.T) {
 	memRepo := NewMemRepository()
 	ctx := context.Background()
 	err := memRepo.Create(ctx, user)
-	if err != nil {
-		assert.ErrorIs(t, err, ErrValidUser)
-		assert.ErrorIs(t, err, ErrUserExists)
-	}
-	tmpUser, _ := memRepo.GetByID(ctx, user.ID)
+	assert.NoError(t, err)
+	tmpUser, err := memRepo.GetByID(ctx, user.ID)
+	assert.NoError(t, err)
 	assert.Equal(t, user, tmpUser)
 }
 
@@ -67,12 +65,12 @@ func TestUpdateUser(t *testing.T) {
 	ctx := context.Background()
 	createExampleData(t, ctx, memRepo)
 	user, err := memRepo.GetByID(ctx, 1)
-	assert.Equal(t, err, nil)
+	assert.NoError(t, err)
 	user.Name = "test1-1"
 	err = memRepo.Update(ctx, user)
-	assert.Equal(t, err, nil)
+	assert.NoError(t, err)
 	newUser, err := memRepo.GetByID(ctx, 1)
-	assert.Equal(t, err, nil)
+	assert.NoError(t, err)
 	assert.Equal(t, newUser.Name, user.Name)
 }
 
@@ -81,7 +79,7 @@ func TestDeleteUser(t *testing.T) {
 	ctx := context.Background()
 	createExampleData(t, ctx, memRepo)
 	err := memRepo.Delete(ctx, 1)
-	assert.Equal(t, err, nil)
+	assert.NoError(t, err)
 	_, err = memRepo.GetByID(ctx, 1)
 	assert.ErrorIs(t, err, ErrUserNotExists)
 }
@@ -110,7 +108,7 @@ func TestParallelCreate(t *testing.T) {
 		}
 		wg.Go(func() {
 			err := memRepo.Create(ctx, user)
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 		})
 	}
 	wg.Wait()

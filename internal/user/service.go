@@ -15,13 +15,13 @@ type UserService struct {
 	repo UserRepository
 }
 
-func NewUserService(repo UserRepository) *UserService {
+func NewUserService(repo UserRepository) (*UserService, error) {
 	if repo == nil {
-		return nil
+		return nil, ErrValidRepo
 	}
 	return &UserService{
 		repo: repo,
-	}
+	}, nil
 }
 
 func validateUser(user User) error {
@@ -29,10 +29,10 @@ func validateUser(user User) error {
 		return ErrValidParam
 	}
 	if strings.TrimSpace(user.Name) == "" {
-		return ErrValidUser
+		return ErrValidParam
 	}
 	if strings.TrimSpace(user.Password) == "" {
-		return ErrValidPassword
+		return ErrValidParam
 	}
 	return nil
 }
