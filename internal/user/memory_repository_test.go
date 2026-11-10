@@ -49,7 +49,8 @@ func TestGetUser(t *testing.T) {
 	memRepo := NewMemRepository()
 	ctx := context.Background()
 	createExampleData(t, ctx, memRepo)
-	tmp, _ := memRepo.GetByID(ctx, 1)
+	tmp, err := memRepo.GetByID(ctx, 1)
+	assert.NoError(t, err)
 	assert.Equal(t, tmp.ID, int64(1))
 }
 
@@ -57,7 +58,7 @@ func TestGetNotExistsUser(t *testing.T) {
 	memRepo := NewMemRepository()
 	ctx := context.Background()
 	_, err := memRepo.GetByID(ctx, 2)
-	assert.Equal(t, err, ErrUserNotExists)
+	assert.ErrorIs(t, err, ErrUserNotExists)
 }
 
 func TestUpdateUser(t *testing.T) {

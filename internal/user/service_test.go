@@ -15,12 +15,15 @@ func TestPassNilRepository(t *testing.T) {
 func TestServiceCreateUser(t *testing.T) {
 	repo := NewMemRepository()
 	svc, err := NewUserService(repo)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	ctx := context.Background()
 	user := User{
-		ID:   int64(-2),
+		ID:   int64(0),
 		Name: "",
 	}
+	err = svc.Create(ctx, user)
+	assert.ErrorIs(t, err, ErrValidParam)
+	user.ID = -2
 	err = svc.Create(ctx, user)
 	assert.ErrorIs(t, err, ErrValidParam)
 	user.ID = 2
@@ -37,7 +40,7 @@ func TestServiceCreateUser(t *testing.T) {
 func TestServiceUpdateUser(t *testing.T) {
 	repo := NewMemRepository()
 	svc, err := NewUserService(repo)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	ctx := context.Background()
 	user := User{
@@ -60,7 +63,7 @@ func TestServiceUpdateUser(t *testing.T) {
 func TestServiceDeleteUser(t *testing.T) {
 	repo := NewMemRepository()
 	svc, err := NewUserService(repo)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	ctx := context.Background()
 	user := User{
@@ -79,7 +82,7 @@ func TestServiceDeleteUser(t *testing.T) {
 func TestServiceGetUser(t *testing.T) {
 	repo := NewMemRepository()
 	svc, err := NewUserService(repo)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	ctx := context.Background()
 	user := User{
@@ -89,7 +92,7 @@ func TestServiceGetUser(t *testing.T) {
 	}
 	err = svc.Create(ctx, user)
 	assert.NoError(t, err)
-	newUser, err := svc.repo.GetByID(ctx, user.ID)
+	newUser, err := svc.GetByID(ctx, user.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, newUser, user)
 }

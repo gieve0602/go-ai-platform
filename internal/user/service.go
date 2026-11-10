@@ -25,7 +25,7 @@ func NewUserService(repo UserRepository) (*UserService, error) {
 }
 
 func validateUser(user User) error {
-	if user.ID < 0 {
+	if user.ID <= 0 {
 		return ErrValidParam
 	}
 	if strings.TrimSpace(user.Name) == "" {
@@ -52,14 +52,14 @@ func (s *UserService) Update(ctx context.Context, user User) error {
 }
 
 func (s *UserService) Delete(ctx context.Context, id int64) error {
-	if id < 0 {
+	if id <= 0 {
 		return ErrValidParam
 	}
 	return s.repo.Delete(ctx, id)
 }
 
 func (s *UserService) GetByID(ctx context.Context, id int64) (User, error) {
-	if id < 0 {
+	if id <= 0 {
 		return User{}, ErrValidParam
 	}
 	return s.repo.GetByID(ctx, id)
