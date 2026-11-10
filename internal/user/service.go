@@ -6,7 +6,10 @@ import (
 	"strings"
 )
 
-var ErrValidPassword = errors.New("password is not valid")
+var (
+	ErrValidPassword = errors.New("password is not valid")
+	ErrValidRepo     = errors.New("Repository is nil")
+)
 
 type UserService struct {
 	repo UserRepository
